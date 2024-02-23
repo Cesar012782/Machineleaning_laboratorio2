@@ -1,11 +1,11 @@
 # *****************************
 #     PCA Module
 # *****************************
-
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from unsupervised.utils.data_generation import generate_sample_data
 
 def my_pca(X, n_components=2):
     # Paso 1: Escalar los datos

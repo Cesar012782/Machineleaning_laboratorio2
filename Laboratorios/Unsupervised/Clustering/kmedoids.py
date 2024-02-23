@@ -3,33 +3,42 @@
 # *****************************
 import numpy as np
 from sklearn_extra.cluster import KMedoids
+from sklearn.metrics import silhouette_score, davies_bouldin_score
+from unsupervised.utils.data_generation import generate_sample_data
+import matplotlib.pyplot as plt
+from sklearn.metrics import pairwise_distances
 
 def my_kmedoids(X, n_clusters=8, max_iter=300):
-    # Paso 1: Inicializar los medoides de manera aleatoria
-    medoid_indices = np.random.choice(len(X), size=n_clusters, replace=False)
+    medoid_indices = np.random.choice(len(X), size=n_clusters, replace=False) # Paso 1: Inicializar los medoides de manera aleatoria
     medoids = X[medoid_indices]
 
-    # Paso 2: Calcular las distancias entre los puntos y los medoides
-    distances = np.zeros((len(X), n_clusters))
-    for i, medoid in enumerate(medoids):
-        distances[:, i] = np.linalg.norm(X - medoid, axis=1)
+def evaluate_kmedoids(X, max_clusters=5, max_iter=300):
+    silhouette_scores = []
+    db_scores = []
 
-    # Paso 3: Asignar cada punto al medoide más cercano
-    labels = np.argmin(distances, axis=1)
+    for k in range(1, max_clusters + 1):
+        medoids, labels = my_kmedoids(X, n_clusters=k, max_iter=max_iter)
 
-    # Paso 4: Actualizar los medoides iterativamente
-    for _ in range(max_iter):
-        for i in range(n_clusters):
-            cluster_indices = np.where(labels == i)[0]
-            cluster_distances = distances[cluster_indices, :]
-            cluster_distances_sum = np.sum(cluster_distances, axis=0)
-            medoid_index = np.argmin(cluster_distances_sum)
-            medoids[i] = X[cluster_indices[medoid_index]]
+        silhouette = silhouette_score(X, labels)
+        db = davies_bouldin_score(X, labels)
 
-            # Actualizar las distancias
-            for j, medoid in enumerate(medoids):
-                distances[:, j] = np.linalg.norm(X - medoid, axis=1)
+        silhouette_scores.append(silhouette)
+        db_scores.append(db)
 
-            labels = np.argmin(distances, axis=1)
+        print(f"Number of clusters: {k}, Silhouette Score: {silhouette}, Davies-Bouldin Score: {db}")
 
-    return medoids, labels
+    plt.figure(figsize=(10, 5)) # Plot Silhouette Scores
+    plt.subplot(1, 2, 1)
+    plt.plot(range(1, max_clusters + 1), silhouette_scores, marker='o')
+    plt.title('Silhouette Score vs Number of Clusters')
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Silhouette Score')
+
+    plt.subplot(1, 2, 2) # Plot Davies-Bouldin Scores
+    plt.plot(range(1, max_clusters + 1), db_scores, marker='o')
+    plt.title('Davies-Bouldin Score vs Number of Clusters')
+    plt.xlabel('Number of Clusters')
+    plt.ylabel('Davies-Bouldin Score')
+
+    plt.tight_layout()
+    plt.show()
